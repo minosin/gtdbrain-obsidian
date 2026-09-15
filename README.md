@@ -35,7 +35,7 @@ Every card note carries a small frontmatter block the sync reads and writes:
 gtdbrain_id: "1b2c…"        # the card on the board
 list: "Next Actions"        # informational mirror of the folder
 kind: "action"              # card | action | project
-context: "@errands"         # Next Actions only — id or label, both work
+context: "@errands"         # id or label, both work
 project: "[[Paint the bedroom]]"
 who: "Bob"                  # Waiting For
 since: "2026-09-01"
