@@ -231,7 +231,7 @@ export function fieldsFor(card: ApiCard, layout: Layout, pathById: Map<string, s
 		id: card.id,
 		list: folder.split('/').pop() ?? '',
 		kind: column ? (card.kind ?? kindForColumn(column)) : card.kind,
-		context: column?.kind === 'next' ? contextLabelFor(card.context, layout.contexts) : null,
+		context: contextLabelFor(card.context, layout.contexts),
 		project: projectName ? `[[${projectName}]]` : null,
 		who: card.who ?? null,
 		since: card.since ?? null,

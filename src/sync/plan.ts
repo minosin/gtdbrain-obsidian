@@ -98,7 +98,7 @@ export function planPush(layout: Layout, locals: LocalNote[], snapshot: Snapshot
 				columnId: column!.id,
 				kind: kindForColumn(column!),
 				notes: normalizeBody(note.body),
-				context: column!.kind === 'next' ? contextIdFor(note.context, layout.contexts) : null,
+				context: contextIdFor(note.context, layout.contexts),
 				who: note.who,
 				since: note.since,
 				projectId: column!.kind === 'next' ? resolveProjectId(note.project, locals, layout) : null,
