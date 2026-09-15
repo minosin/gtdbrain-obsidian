@@ -8,6 +8,8 @@ The plugin lays out the classic GTD structure as plain Markdown — **Inbox**, *
 
 It is free and open source. Sign in with an email code — no password, no API key — and the vault becomes a GTD Brain account (or joins the one you already have).
 
+![The GTD folder in Obsidian: one note per card, GTD fields as properties](docs/vault.png)
+
 ## What you get
 
 ```
