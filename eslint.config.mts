@@ -16,6 +16,8 @@ export default defineConfig(
 		'vitest.config.ts',
 		'test',
 		'test-vault',
+		'scripts',
+		'docs',
 	]),
 	{
 		languageOptions: {
