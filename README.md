@@ -2,7 +2,7 @@
 
 <img src="https://gtdbrain.com/gtdbrain/icon-512.png" alt="GTD Brain" width="96" align="right">
 
-Run [Getting Things Done](https://gtdbrain.com) in your own vault and keep it in sync with your GTD Brain board.
+Run [Getting Things Done](https://gtdbrain.com/gtd-ai?source=obsidian) in your own vault and keep it in sync with your GTD Brain board.
 
 The plugin lays out the classic GTD structure as plain Markdown — **Inbox**, **Next Actions** grouped by context, **Projects**, **Waiting For**, **Someday Maybe** — one note per card, plus a **Weekly Review** checklist. Edit a note, move it to another list folder, or create a new one, and the change lands on your GTD Brain board. Capture on your phone, from ChatGPT or Claude, and the note appears in your vault.
 
@@ -67,7 +67,7 @@ Any other property you add is yours and stays untouched. The vault is plain Mark
 
 ## Network use, account and privacy — please read
 
-- **An account is required.** The plugin is a client for [GTD Brain](https://gtdbrain.com); it does nothing until you sign in. Signing in with a new email creates a free account. The plugin and the sync are free; a GTD Brain subscription unlocks the AI features and the full mobile apps and is never required for this plugin.
+- **An account is required.** The plugin is a client for [GTD Brain](https://gtdbrain.com/?source=obsidian); it does nothing until you sign in. Signing in with a new email creates a free account. The plugin and the sync are free; a GTD Brain subscription unlocks the AI features and the full mobile apps and is never required for this plugin.
 - **Network requests** go to `https://api.minosin.com` (GTD Brain's backend, operated by Minosin AB) and nowhere else: to send you the sign-in code, to exchange it for a session token, and to read and write your board during a sync. Requests are made with Obsidian's `requestUrl` and only when you sign in, run a command, or on the sync interval you configure.
 - **What is sent:** your email at sign-in; for each card note in the GTD folder, its title (file name), body, and the frontmatter fields listed above. Nothing outside the GTD folder, no other properties, no vault metadata.
 - **Server-side logging:** like every GTD Brain client, requests are logged on the backend (endpoint, timestamp, a random per-install id the plugin generates, the plugin version, your account). There is no client-side telemetry or analytics in the plugin. How that data is handled: [gtdbrain.com/privacy](https://gtdbrain.com/privacy) · [terms](https://gtdbrain.com/terms).
@@ -96,11 +96,11 @@ npm run lint     # eslint with eslint-plugin-obsidianmd
 npm run build    # type-check + production bundle
 ```
 
-Copy `main.js`, `manifest.json`, `styles.css` into `<vault>/.obsidian/plugins/gtd-brain/` to test locally. The backend API this plugin uses is documented in the GTD Brain [connect guide for Obsidian](https://gtdbrain.com/connect/obsidian).
+Copy `main.js`, `manifest.json`, `styles.css` into `<vault>/.obsidian/plugins/gtd-brain/` to test locally. The backend API this plugin uses is documented in the GTD Brain [connect guide for Obsidian](https://gtdbrain.com/connect/obsidian?source=obsidian).
 
 ## Support
 
-- Guide: https://gtdbrain.com/connect/obsidian
+- Guide: https://gtdbrain.com/connect/obsidian?source=obsidian
 - Issues: https://github.com/minosin/gtdbrain-obsidian/issues
 - Email: admin@minosin.com
 
