@@ -1,7 +1,7 @@
 {
 	"id": "gtd-brain",
 	"name": "GTD Brain",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"minAppVersion": "1.6.6",
 	"description": "Set up a Getting Things Done vault (Inbox, Next Actions by context, Projects, Waiting For, Someday/Maybe, Weekly Review) and sync it two-way with your GTD Brain board.",
 	"author": "Minosin AB",

@@ -1,6 +1,6 @@
 {
   "name": "gtdbrain-obsidian",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "GTD Brain for Obsidian: scaffold a Getting Things Done vault and sync it with your GTD Brain board.",
   "main": "main.js",
   "type": "module",
@@ -11,7 +11,13 @@
     "version": "node version-bump.mjs && git add manifest.json versions.json",
     "lint": "eslint ."
   },
-  "keywords": ["obsidian", "gtd", "getting-things-done", "productivity", "sync"],
+  "keywords": [
+    "obsidian",
+    "gtd",
+    "getting-things-done",
+    "productivity",
+    "sync"
+  ],
   "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.39.4",
