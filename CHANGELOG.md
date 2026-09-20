@@ -1,3 +1,7 @@
+## 1.0.1
+
+- Fixed: a note moved from Inbox into Next Actions and given a `project:` link in the same sync lost the link (the board only links projects to actions, and the card only became one with the move). The link is now applied right after the move.
+
 ## 1.0.0
 
 First release.
