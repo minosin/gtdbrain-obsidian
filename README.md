@@ -4,7 +4,7 @@
 
 Run [Getting Things Done](https://gtdbrain.com/gtd-ai?source=obsidian) in your own vault and keep it in sync with your GTD Brain board.
 
-The plugin lays out the classic GTD structure as plain Markdown — **Inbox**, **Next Actions** grouped by context, **Projects**, **Waiting For**, **Someday Maybe** — one note per card, plus a **Weekly Review** checklist. Edit a note, move it to another list folder, or create a new one, and the change lands on your GTD Brain board. Capture on your phone, from ChatGPT or Claude, and the note appears in your vault.
+The plugin lays out the classic GTD structure as plain Markdown — **Inbox**, **Next Actions** grouped by context, **Projects**, **Waiting For**, **Someday Maybe** — one note per card, plus a **Weekly Review** checklist. Edit a note, move it to another list folder, or create a new one, and the change lands on your GTD Brain board. Capture on your phone, from ChatGPT or Claude, or by messaging the [GTD Brain bot on Telegram](https://t.me/GTDBrainBot?start=obsidian), and the note appears in your vault.
 
 It is free and open source. Sign in with an email code — no password, no API key — and the vault becomes a GTD Brain account (or joins the one you already have).
 
