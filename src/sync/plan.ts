@@ -125,9 +125,15 @@ export function planPush(layout: Layout, locals: LocalNote[], snapshot: Snapshot
 		if ((note.who ?? null) !== (base.who ?? null)) patch.who = note.who;
 		if ((note.since ?? null) !== (base.since ?? null)) patch.since = note.since;
 		const projectId = resolveProjectId(note.project, locals, layout);
-		if ((projectId ?? null) !== (base.projectId ?? null) && server.kind === 'action') patch.projectId = projectId;
+		const projectChanged = (projectId ?? null) !== (base.projectId ?? null);
+		const moving = column!.id !== base.columnId;
+		const becomesAction = moving && column!.kind === 'next' && server.kind !== 'action';
+		if (projectChanged && server.kind === 'action') patch.projectId = projectId;
 		if (Object.keys(patch).length > 0) ops.push({ type: 'patch', id: note.id, path: note.path, patch });
-		if (column!.id !== base.columnId) ops.push({ type: 'move', id: note.id, path: note.path, toColumnId: column!.id });
+		if (moving) ops.push({ type: 'move', id: note.id, path: note.path, toColumnId: column!.id });
+		// The board only links a project to an action, which the card becomes with the move
+		// above — so a note clarified and linked in one go gets its project right after it.
+		if (projectChanged && becomesAction && projectId) ops.push({ type: 'patch', id: note.id, path: note.path, patch: { projectId } });
 	}
 
 	// A card note that vanished from every list folder since the last sync was deleted

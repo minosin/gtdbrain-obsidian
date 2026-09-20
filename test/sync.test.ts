@@ -156,6 +156,20 @@ describe('push', () => {
 		expect(vault.frontmatter('GTD Brain/Next Actions/Renew passport.md')).toMatchObject({ list: 'Next Actions', kind: 'action' });
 	});
 
+	it('links the project when a note is moved into Next Actions and linked in the same sync', async () => {
+		const project = backend.seed({ title: 'Renew passport', columnId: 'col-projects' });
+		backend.seed({ title: 'Book flights', columnId: 'col-inbox' });
+		const first = await runSync(CTX, vault, OPTS, {});
+		await vault.rename('GTD Brain/Inbox/Book flights.md', 'GTD Brain/Next Actions/Book flights.md');
+		vault.files.set('GTD Brain/Next Actions/Book flights.md', vault.files.get('GTD Brain/Next Actions/Book flights.md')!.replace('---\n', '---\ncontext: "@computer"\nproject: "[[Renew passport]]"\n', 1));
+
+		const result = await runSync(CTX, vault, OPTS, first.snapshot);
+
+		expect(result.errors).toEqual([]);
+		expect(backend.cards.get('card-2')).toMatchObject({ columnId: 'col-next', kind: 'action', projectId: project.id });
+		expect(vault.frontmatter('GTD Brain/Next Actions/Book flights.md')).toMatchObject({ list: 'Next Actions', kind: 'action', project: '[[Renew passport]]' });
+	});
+
 	it('renames the card when the note is renamed', async () => {
 		backend.seed({ title: 'Renew passport', columnId: 'col-inbox' });
 		const first = await runSync(CTX, vault, OPTS, {});
