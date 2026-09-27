@@ -95,6 +95,10 @@ export class FakeBackend {
 	cards = new Map<string, ApiCard>();
 	requests: { method: string; path: string; body: unknown; headers: Record<string, string> }[] = [];
 	nextId = 1;
+	/** false: the board carries membership {active: false} and every write is a 402. */
+	member: boolean | undefined = undefined;
+	/** A membership that lapsed after the board was read: writes are a 402, the board says nothing. */
+	writesGated = false;
 	inbox: ApiColumn;
 	next: ApiColumn;
 	projects: ApiColumn;
@@ -121,7 +125,9 @@ export class FakeBackend {
 	}
 
 	board(): Board {
-		return { columns: structuredClone(this.columns), cards: structuredClone([...this.cards.values()]), contexts: structuredClone(CONTEXTS) };
+		const board: Board = { columns: structuredClone(this.columns), cards: structuredClone([...this.cards.values()]), contexts: structuredClone(CONTEXTS) };
+		if (this.member !== undefined) board.membership = this.member ? { active: true } : { active: false, signupUrl: SIGNUP_URL };
+		return board;
 	}
 
 	install(): void {
@@ -146,6 +152,9 @@ export class FakeBackend {
 		if (!m) return this.error(404, 'not_found', 'no route');
 		const rest = m[1]!;
 		if (rest === 'board') return this.json(200, this.board());
+		if (this.member === false || this.writesGated) {
+			return this.json(402, { error: { code: 'subscription_required', message: 'GTD Brain needs an active membership.', signupUrl: SIGNUP_URL, held: false } });
+		}
 		if (rest === 'cards' && method === 'POST') {
 			const col = this.columns.find((c) => c.id === body.columnId);
 			if (!col) return this.error(400, 'invalid_request', 'Column does not exist');
@@ -193,5 +202,7 @@ export class FakeBackend {
 		return this.error(404, 'not_found', 'no route');
 	}
 }
+
+export const SIGNUP_URL = 'https://gtdbrain.com/buy?email=a%40b.co&source=obsidian';
 
 export const CTX = { apiBase: 'https://api.test', version: '1.0.0', installId: 'install-1', token: 'tok' };

@@ -3,7 +3,7 @@ import { runSync, ensureScaffold, SignedOutError } from '../src/sync/engine';
 import { planPush, type Snapshot } from '../src/sync/plan';
 import { buildLayout, contextIdFor, safeFileName, wikilinkTarget } from '../src/vault/layout';
 import { parseSimpleFrontmatter, renderNote, splitFrontmatter } from '../src/vault/notes';
-import { CONTEXTS, CTX, FakeBackend, MemoryVault } from './fakes';
+import { CONTEXTS, CTX, FakeBackend, MemoryVault, SIGNUP_URL } from './fakes';
 
 const ROOT = 'GTD Brain';
 const OPTS = { root: ROOT, keepArchived: true };
@@ -280,5 +280,73 @@ describe('pull', () => {
 
 	it('signals a signed-out session', async () => {
 		await expect(runSync({ ...CTX, token: null }, vault, OPTS, {})).rejects.toBeInstanceOf(SignedOutError);
+	});
+});
+
+describe('without a membership', () => {
+	it('pulls the board and sends nothing, and says so', async () => {
+		backend.member = false;
+		backend.seed({ title: 'Renew passport', columnId: 'col-inbox' });
+
+		const result = await runSync(CTX, vault, OPTS, {});
+
+		expect(result.membershipRequired).toEqual({ signupUrl: SIGNUP_URL });
+		expect(result.pending).toBe(0);
+		expect(result.errors).toEqual([]);
+		expect(vault.files.has('GTD Brain/Inbox/Renew passport.md')).toBe(true);
+		expect(backend.requests.filter((r) => r.method !== 'GET')).toEqual([]);
+	});
+
+	it('keeps every vault change in the notes and sends it once the membership starts', async () => {
+		backend.seed({ title: 'Renew passport', columnId: 'col-inbox' });
+		backend.seed({ title: 'Learn the cello', columnId: 'col-someday' });
+		backend.seed({ title: 'Call Bob', columnId: 'col-inbox' });
+		const first = await runSync(CTX, vault, OPTS, {});
+		backend.member = false;
+		vault.files.set('GTD Brain/Inbox/Buy milk.md', 'from the corner shop\n');
+		vault.files.set('GTD Brain/Inbox/Renew passport.md', vault.files.get('GTD Brain/Inbox/Renew passport.md')!.replace(/\n---\n.*$/s, '\n---\nbring two photos\n'));
+		await vault.rename('GTD Brain/Someday Maybe/Learn the cello.md', 'GTD Brain/Next Actions/Learn the cello.md');
+		vault.files.delete('GTD Brain/Inbox/Call Bob.md');
+
+		const locked = await runSync(CTX, vault, OPTS, first.snapshot);
+
+		expect(locked.membershipRequired).not.toBeNull();
+		expect(locked.pending).toBe(4);
+		expect(locked.errors).toEqual([]);
+		expect(backend.requests.filter((r) => r.method !== 'GET')).toEqual([]);
+		// the pull left the unsent changes alone
+		expect(vault.body('GTD Brain/Inbox/Renew passport.md')).toBe('bring two photos\n');
+		expect(vault.files.has('GTD Brain/Next Actions/Learn the cello.md')).toBe(true);
+		expect(vault.files.has('GTD Brain/Someday Maybe/Learn the cello.md')).toBe(false);
+		expect(vault.files.has('GTD Brain/Inbox/Call Bob.md')).toBe(false);
+		expect(vault.files.has('GTD Brain/Inbox/Buy milk.md')).toBe(true);
+
+		backend.member = true;
+		const joined = await runSync(CTX, vault, OPTS, locked.snapshot);
+
+		expect(joined.membershipRequired).toBeNull();
+		expect(joined.errors).toEqual([]);
+		expect(joined.pushed).toBe(4);
+		expect(backend.cards.get('card-1')!.notes).toBe('bring two photos');
+		expect(backend.cards.get('card-2')).toMatchObject({ columnId: 'col-next', kind: 'action' });
+		expect(backend.cards.get('card-3')!.archived).toBe(true);
+		expect([...backend.cards.values()].some((c) => c.title === 'Buy milk' && c.columnId === 'col-inbox')).toBe(true);
+	});
+
+	it('stops at the first rejected write when the membership lapsed mid-session', async () => {
+		backend.seed({ title: 'Renew passport', columnId: 'col-inbox' });
+		const first = await runSync(CTX, vault, OPTS, {});
+		backend.writesGated = true;
+		vault.files.set('GTD Brain/Inbox/Renew passport.md', vault.files.get('GTD Brain/Inbox/Renew passport.md')!.replace(/\n---\n.*$/s, '\n---\nlocal edit\n'));
+		vault.files.set('GTD Brain/Inbox/Buy milk.md', '');
+
+		const result = await runSync(CTX, vault, OPTS, first.snapshot);
+
+		expect(result.membershipRequired).toEqual({ signupUrl: SIGNUP_URL });
+		expect(result.pending).toBe(2);
+		expect(result.errors).toEqual([]);
+		expect(backend.requests.filter((r) => r.method !== 'GET')).toHaveLength(1);
+		expect(vault.body('GTD Brain/Inbox/Renew passport.md')).toBe('local edit\n');
+		expect(result.snapshot['card-1']!.notes).toBe('');
 	});
 });

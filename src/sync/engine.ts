@@ -1,10 +1,10 @@
 import type { ApiCard, Board } from '../api/board';
 import { archiveCard, createCard, fetchBoard, moveCard, updateCard } from '../api/board';
-import { ApiError, type ClientContext } from '../api/client';
+import { ApiError, type ClientContext, isMembershipRequired } from '../api/client';
 import { ARCHIVE_FOLDER, buildLayout, contextIdFor, contextLabelFor, kindForColumn, type Layout, ROLE_FOLDERS, sortedColumns, wikilinkTarget } from '../vault/layout';
 import { type CardFields, normalizeBody, renderNote } from '../vault/notes';
 import { overviewsFor, weeklyReviewNote } from '../vault/overviews';
-import { basenameMatches, isArchiveFolder, type LocalNote, planPush, type Snapshot, snapshotEntryFor, targetFor } from './plan';
+import { basenameMatches, isArchiveFolder, type LocalNote, planPush, type PushOp, type Snapshot, snapshotEntryFor, targetFor } from './plan';
 
 // The few vault operations the sync needs, so the engine runs against Obsidian and
 // against an in-memory vault in tests.
@@ -33,6 +33,10 @@ export type SyncResult = {
 	pulled: number;
 	warnings: string[];
 	errors: string[];
+	/** Set when the account has no membership: the board was pulled, nothing was pushed. */
+	membershipRequired: { signupUrl: string | null } | null;
+	/** Vault changes not sent because of that; they stay in the notes for a later sync. */
+	pending: number;
 };
 
 export class SignedOutError extends Error {}
@@ -77,7 +81,21 @@ export async function runSync(ctx: ClientContext, vault: VaultAdapter, opts: Syn
 	warnings.push(...plan.warnings);
 	let pushed = 0;
 	const freshIds = new Set<string>();
+	let membershipRequired: SyncResult['membershipRequired'] =
+		board.membership?.active === false ? { signupUrl: board.membership.signupUrl ?? null } : null;
+	// Changes held back without a membership. Their cards are left alone by the pull and keep
+	// their last-sync snapshot, so the same diff is pushed once the membership starts.
+	const pendingIds = new Set<string>();
+	let pendingCreates = 0;
+	const holdBack = (op: PushOp): void => {
+		if (op.type === 'create') pendingCreates++;
+		else pendingIds.add(op.id);
+	};
 	for (const op of plan.ops) {
+		if (membershipRequired) {
+			holdBack(op);
+			continue;
+		}
 		try {
 			switch (op.type) {
 				case 'create': {
@@ -108,12 +126,17 @@ export async function runSync(ctx: ClientContext, vault: VaultAdapter, opts: Syn
 			pushed++;
 		} catch (e) {
 			if (isSignedOut(e)) throw new SignedOutError();
+			if (isMembershipRequired(e)) {
+				membershipRequired = { signupUrl: e.signupUrl };
+				holdBack(op);
+				continue;
+			}
 			const where = op.type === 'create' ? op.note.path : op.path ?? op.id;
 			errors.push(`${op.type} failed for ${where}: ${errorMessage(e)}`);
 		}
 	}
 
-	if (plan.ops.length > 0) {
+	if (pushed > 0) {
 		board = await fetchBoard(ctx);
 		layout = buildLayout(opts.root, board.columns, board.cards, board.contexts ?? []);
 	}
@@ -139,6 +162,10 @@ export async function runSync(ctx: ClientContext, vault: VaultAdapter, opts: Syn
 
 	for (const card of cards) {
 		const note = noteById.get(card.id);
+		if (pendingIds.has(card.id)) {
+			if (note) pathById.set(card.id, note.path);
+			continue;
+		}
 		try {
 			if (card.archived) {
 				if (!note) continue;
@@ -215,10 +242,15 @@ export async function runSync(ctx: ClientContext, vault: VaultAdapter, opts: Syn
 
 	const next: Snapshot = {};
 	for (const card of board.cards) {
+		const kept = pendingIds.has(card.id) ? snapshot[card.id] : undefined;
+		if (kept) {
+			next[card.id] = kept;
+			continue;
+		}
 		const path = pathById.get(card.id);
 		if (path) next[card.id] = snapshotEntryFor(card, path);
 	}
-	return { snapshot: next, pushed, pulled, warnings, errors };
+	return { snapshot: next, pushed, pulled, warnings, errors, membershipRequired, pending: pendingCreates + pendingIds.size };
 }
 
 export function fieldsFor(card: ApiCard, layout: Layout, pathById: Map<string, string>): CardFields {

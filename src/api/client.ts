@@ -19,6 +19,7 @@ export class ApiError extends Error {
 		public readonly status: number,
 		public readonly code: string,
 		message: string,
+		public readonly signupUrl: string | null = null,
 	) {
 		super(message);
 		this.name = 'ApiError';
@@ -40,20 +41,27 @@ export function standardHeaders(ctx: ClientContext): Record<string, string> {
 export function parseError(status: number, text: string): ApiError {
 	let code = 'http_' + status;
 	let message = `Request failed (${status})`;
+	let signupUrl: string | null = null;
 	try {
 		const body = JSON.parse(text) as { error?: unknown };
 		const err = body?.error;
 		if (err && typeof err === 'object') {
-			const e = err as { code?: unknown; message?: unknown };
+			const e = err as { code?: unknown; message?: unknown; signupUrl?: unknown };
 			if (typeof e.code === 'string') code = e.code;
 			if (typeof e.message === 'string') message = e.message;
+			if (typeof e.signupUrl === 'string') signupUrl = e.signupUrl;
 		} else if (typeof err === 'string') {
 			message = err;
 		}
 	} catch {
 		// non-JSON body: keep the generic message
 	}
-	return new ApiError(status, code, message);
+	return new ApiError(status, code, message, signupUrl);
+}
+
+// A non-member can read the board but not change it: every write answers 402.
+export function isMembershipRequired(e: unknown): e is ApiError {
+	return e instanceof ApiError && e.status === 402;
 }
 
 export async function apiJson<T>(

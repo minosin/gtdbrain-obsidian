@@ -28,7 +28,10 @@ export type ApiCard = {
 
 export type ApiContext = { id: string; label: string; color: string; order?: number };
 
-export type Board = { columns: ApiColumn[]; cards: ApiCard[]; contexts?: ApiContext[]; seeded?: boolean };
+// Only sent to plugin builds that handle it. signupUrl comes with active: false.
+export type Membership = { active: boolean; signupUrl?: string };
+
+export type Board = { columns: ApiColumn[]; cards: ApiCard[]; contexts?: ApiContext[]; seeded?: boolean; membership?: Membership };
 
 const GTD = `/api/${CLIENT}/v2/gtd`;
 
