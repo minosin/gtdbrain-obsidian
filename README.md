@@ -2,7 +2,7 @@
 
 <img src="https://gtdbrain.com/gtdbrain/icon-512.png" alt="GTD Brain" width="96" align="right">
 
-**How do you do GTD in Obsidian?** Install this free community plugin, sign in with your email, and your vault gets a `GTD Brain` folder with the five [Getting Things Done](https://gtdbrain.com/gtd-method?source=obsidian-readme) lists as plain Markdown, one note per item — **Inbox**, **Next Actions** grouped by context, **Projects**, **Waiting For**, **Someday Maybe** — plus a **Weekly Review** checklist. Capture is a new note in Inbox. Clarifying is moving the note to another folder and setting a property. Every note syncs both ways with a GTD Brain board that is also on the web, on your phone, and in ChatGPT and Claude.
+**How do you do GTD in Obsidian?** Install this open-source community plugin, sign in with your email, and your vault gets a `GTD Brain` folder with the five [Getting Things Done](https://gtdbrain.com/gtd-method?source=obsidian-readme) lists as plain Markdown, one note per item — **Inbox**, **Next Actions** grouped by context, **Projects**, **Waiting For**, **Someday Maybe** — plus a **Weekly Review** checklist. Capture is a new note in Inbox. Clarifying is moving the note to another folder and setting a property. Every note syncs both ways with a GTD Brain board that is also on the web, on your phone, and in ChatGPT and Claude. The sync needs a GTD Brain membership; the yearly plan starts with one month free.
 
 Install it from **Settings → Community plugins → Browse → “GTD Brain”**, or from [its page in the Obsidian directory](https://obsidian.md/plugins?id=gtd-brain). The full walkthrough with screenshots is [How to set up GTD in Obsidian](https://gtdbrain.com/blog/gtd-in-obsidian?source=obsidian-readme).
 
@@ -76,8 +76,8 @@ Any other property you add is yours and stays untouched.
 ## Install the Obsidian GTD plugin
 
 1. **Install** — Settings → Community plugins (turn off Restricted mode if it is on) → Browse → search “GTD Brain” → Install → Enable. Or open [the plugin's directory page](https://obsidian.md/plugins?id=gtd-brain) and press *Add to Obsidian*.
-2. **Sign in** — run the command *GTD Brain: Sign in* (or open the plugin settings). Enter your email, type the code we send you. No password, no API key. A new email creates a free GTD Brain account with a starter board; an email you already use for GTD Brain connects the vault to that board.
-3. **Done** — the moment the code is accepted the plugin creates the folders, the overview notes and the Weekly Review checklist, and pulls every card on the board into the vault as a note. *GTD Brain: Set up GTD folders* recreates anything you delete.
+2. **Sign in** — run the command *GTD Brain: Sign in* (or open the plugin settings). Enter your email, type the code we send you. No password, no API key. A new email creates a GTD Brain account; an email you already use for GTD Brain connects the vault to that board. If the account has no membership yet, the plugin shows the page to start one.
+3. **Done** — the moment the code is accepted the plugin creates the folders and the Weekly Review checklist and, with a membership, pulls every card on the board into the vault as a note and writes the overview notes. If you start the membership after signing in, the vault syncs on its own on the next sync. *GTD Brain: Set up GTD folders* recreates anything you delete.
 
 Sync runs on startup, every 5 minutes (configurable), and on *GTD Brain: Sync now* (ribbon icon or command). The status bar shows the state. Works on desktop and mobile.
 
@@ -96,9 +96,9 @@ Manual install, for a vault that cannot reach the directory: download `main.js`,
 
 ## What is free and what is not
 
-- **This plugin and the vault sync are free**, with no limit on notes or syncs, and the code is open source under MIT.
-- A free GTD Brain account can **view** the same board in the web and phone apps; **changing** it there needs the GTD Brain membership. ChatGPT, Claude, Telegram and the other assistants get a few free actions on the board, then need the membership too.
-- It is one subscription for everything — web, iOS, Android and every assistant — and it is never required to use this plugin. Plans and prices: [gtdbrain.com/pricing](https://gtdbrain.com/pricing?source=obsidian-readme).
+- **The plugin code is free** and open source under MIT.
+- **Syncing the vault with GTD Brain needs a GTD Brain membership.** The yearly plan starts with one month free — cancel before it ends and you pay nothing. Without a membership the plugin syncs nothing and shows the page to start one; the status bar says *membership needed*.
+- It is one subscription for everything — web, iOS, Android and every assistant (ChatGPT, Claude, Telegram and the rest), with no limit on notes or syncs. Plans and prices: [gtdbrain.com/pricing](https://gtdbrain.com/pricing?source=obsidian-readme).
 
 ## How the two-way sync decides
 
@@ -109,8 +109,9 @@ Manual install, for a vault that cannot reach the directory: download `main.js`,
 
 ## Network use, account and privacy
 
-- **An account is required.** The plugin is a client for [GTD Brain](https://gtdbrain.com/?source=obsidian-readme); it does nothing until you sign in. Signing in with a new email creates a free account.
-- **Network requests** go to `https://api.minosin.com` (GTD Brain's backend, operated by Minosin AB) and nowhere else: to send you the sign-in code, to exchange it for a session token, and to read and write your board during a sync. Requests are made with Obsidian's `requestUrl` and only when you sign in, run a command, or on the sync interval you configure.
+- **Account required.** The plugin is a client for [GTD Brain](https://gtdbrain.com/?source=obsidian-readme); it does nothing until you sign in. Signing in with a new email creates an account.
+- **Payment required for full access.** Syncing needs an active GTD Brain membership (the yearly plan starts with one month free). See [What is free and what is not](#what-is-free-and-what-is-not).
+- **Network requests** go to `https://api.minosin.com` (GTD Brain's backend, operated by Minosin AB) and nowhere else: to send you the sign-in code, to exchange it for a session token, and to read and write your board during a sync. Requests are made with Obsidian's `requestUrl` and only when you sign in, run a command, or on the sync interval you configure. The *Start your free month* button opens gtdbrain.com in your browser.
 - **What is sent:** your email at sign-in; for each card note in the GTD folder, its title (file name), body, and the frontmatter fields listed above. Nothing outside the GTD folder, no other properties, no vault metadata.
 - **Server-side logging:** like every GTD Brain client, requests are logged on the backend (endpoint, timestamp, a random per-install id the plugin generates, the plugin version, your account). There is no client-side telemetry or analytics in the plugin. How that data is handled: [gtdbrain.com/privacy](https://gtdbrain.com/privacy?source=obsidian-readme) · [terms](https://gtdbrain.com/terms?source=obsidian-readme).
 - **Where the token lives:** the session token is stored in the plugin's `data.json` inside your vault's `.obsidian` folder, like any sync plugin. *Sign out* removes it. Do not share that file.

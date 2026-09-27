@@ -95,6 +95,9 @@ export class FakeBackend {
 	cards = new Map<string, ApiCard>();
 	requests: { method: string; path: string; body: unknown; headers: Record<string, string> }[] = [];
 	nextId = 1;
+	/** Returns true for the GTD routes that answer 402, like the backend does for a non-member. */
+	paywalled: ((method: string, route: string) => boolean) | null = null;
+	held = false;
 	inbox: ApiColumn;
 	next: ApiColumn;
 	projects: ApiColumn;
@@ -145,6 +148,16 @@ export class FakeBackend {
 		const m = /^\/api\/gtdbrain\/v2\/gtd\/(.*)$/.exec(url.pathname);
 		if (!m) return this.error(404, 'not_found', 'no route');
 		const rest = m[1]!;
+		if (this.paywalled?.(method, rest)) {
+			return this.json(402, {
+				error: {
+					code: 'subscription_required',
+					message: 'GTD Brain needs an active membership. Start your free month on gtdbrain.com.',
+					signupUrl: 'https://gtdbrain.com/buy?email=xx-test%40example.com&source=obsidian',
+					held: this.held && rest === 'cards' && method === 'POST',
+				},
+			});
+		}
 		if (rest === 'board') return this.json(200, this.board());
 		if (rest === 'cards' && method === 'POST') {
 			const col = this.columns.find((c) => c.id === body.columnId);

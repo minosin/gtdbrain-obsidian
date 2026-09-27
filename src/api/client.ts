@@ -14,11 +14,16 @@ export type ClientContext = {
 	token: string | null;
 };
 
+// Extra fields a 402 subscription_required error carries: where to start the membership,
+// and whether a gated capture was kept to land on the board once it starts.
+export type ApiErrorDetails = { signupUrl?: string; held?: boolean };
+
 export class ApiError extends Error {
 	constructor(
 		public readonly status: number,
 		public readonly code: string,
 		message: string,
+		public readonly details: ApiErrorDetails = {},
 	) {
 		super(message);
 		this.name = 'ApiError';
@@ -40,20 +45,23 @@ export function standardHeaders(ctx: ClientContext): Record<string, string> {
 export function parseError(status: number, text: string): ApiError {
 	let code = 'http_' + status;
 	let message = `Request failed (${status})`;
+	const details: ApiErrorDetails = {};
 	try {
 		const body = JSON.parse(text) as { error?: unknown };
 		const err = body?.error;
 		if (err && typeof err === 'object') {
-			const e = err as { code?: unknown; message?: unknown };
+			const e = err as { code?: unknown; message?: unknown; signupUrl?: unknown; held?: unknown };
 			if (typeof e.code === 'string') code = e.code;
 			if (typeof e.message === 'string') message = e.message;
+			if (typeof e.signupUrl === 'string' && e.signupUrl) details.signupUrl = e.signupUrl;
+			if (typeof e.held === 'boolean') details.held = e.held;
 		} else if (typeof err === 'string') {
 			message = err;
 		}
 	} catch {
 		// non-JSON body: keep the generic message
 	}
-	return new ApiError(status, code, message);
+	return new ApiError(status, code, message, details);
 }
 
 export async function apiJson<T>(

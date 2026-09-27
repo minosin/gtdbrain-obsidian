@@ -1,3 +1,8 @@
+## 1.1.0
+
+- Syncing now needs a GTD Brain membership. When the backend answers that the account has none (right after sign-in, or on any sync), the sync stops before anything is pushed, the status bar shows *membership needed*, and a *Start your free month* screen opens with a button to the membership page. Automatic syncs open that screen once per Obsidian session; *Sync now* opens it every time. Syncing on the interval continues, so the vault syncs on its own once the membership starts.
+- The README states that an account is required and payment is required for full access.
+
 ## 1.0.1
 
 - Fixed: a note moved from Inbox into Next Actions and given a `project:` link in the same sync lost the link (the board only links projects to actions, and the card only became one with the move). The link is now applied right after the move.

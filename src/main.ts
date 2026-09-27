@@ -3,8 +3,10 @@ import type { Session } from './api/auth';
 import { ensureBoard, type Board } from './api/board';
 import { ApiError, type ClientContext } from './api/client';
 import { DEFAULT_SETTINGS, GtdBrainSettingTab, type GtdBrainSettings, type PluginData } from './settings';
-import { ensureScaffold, runSync, SignedOutError } from './sync/engine';
+import { ensureScaffold, PaymentRequiredError, runSync, SignedOutError } from './sync/engine';
+import { PaywallGate, type SyncTrigger } from './sync/paywall';
 import { LoginModal } from './ui/loginModal';
+import { PaywallModal } from './ui/paywallModal';
 import { ObsidianVaultAdapter } from './vault/obsidianAdapter';
 
 export default class GtdBrainPlugin extends Plugin {
@@ -12,6 +14,7 @@ export default class GtdBrainPlugin extends Plugin {
 	private syncing = false;
 	private timer: number | null = null;
 	private statusEl: HTMLElement | null = null;
+	private readonly paywall = new PaywallGate();
 
 	get prefs(): GtdBrainSettings {
 		return this.data.settings;
@@ -72,12 +75,18 @@ export default class GtdBrainPlugin extends Plugin {
 	async signIn(session: Session): Promise<void> {
 		this.data.session = session;
 		this.data.snapshot = {};
+		this.paywall.clear();
 		await this.saveAll();
 		this.updateStatus();
 		let board: Board | null = null;
 		try {
 			board = await ensureBoard(this.clientContext());
 		} catch (e) {
+			if (e instanceof ApiError && e.status === 402) {
+				await ensureScaffold(new ObsidianVaultAdapter(this.app), this.prefs.rootFolder, null);
+				this.showPaywall(new PaymentRequiredError(e.message, e.details.signupUrl ?? null), 'sign-in');
+				return;
+			}
 			// An older backend without POST /board: GET during the sync still works for
 			// accounts that already have a board.
 			if (!(e instanceof ApiError && e.status === 404)) throw e;
@@ -89,6 +98,7 @@ export default class GtdBrainPlugin extends Plugin {
 	async signOut(): Promise<void> {
 		this.data.session = null;
 		this.data.snapshot = {};
+		this.paywall.clear();
 		await this.saveAll();
 		this.updateStatus();
 		new Notice('Signed out. Your notes stay in the vault.');
@@ -101,7 +111,8 @@ export default class GtdBrainPlugin extends Plugin {
 			try {
 				board = await ensureBoard(this.clientContext());
 			} catch (e) {
-				if (!(e instanceof ApiError && e.status === 404)) {
+				// A non-member gets the membership screen from the sync below.
+				if (!(e instanceof ApiError && (e.status === 404 || e.status === 402))) {
 					new Notice(`Could not reach GTD Brain: ${e instanceof Error ? e.message : String(e)}`);
 				}
 			}
@@ -123,7 +134,7 @@ export default class GtdBrainPlugin extends Plugin {
 		}
 	}
 
-	async syncNow(trigger: 'manual' | 'startup' | 'interval' | 'sign-in' | 'scaffold'): Promise<void> {
+	async syncNow(trigger: SyncTrigger): Promise<void> {
 		if (!this.data.session) {
 			if (trigger === 'manual') new LoginModal(this.app, this, () => this.updateStatus()).open();
 			return;
@@ -139,6 +150,7 @@ export default class GtdBrainPlugin extends Plugin {
 				this.data.snapshot,
 			);
 			this.data.snapshot = result.snapshot;
+			this.paywall.clear();
 			await this.saveAll();
 			for (const w of result.warnings) console.warn('[GTD Brain]', w);
 			if (result.errors.length > 0) {
@@ -154,6 +166,8 @@ export default class GtdBrainPlugin extends Plugin {
 				await this.saveAll();
 				this.updateStatus();
 				new Notice('Your GTD Brain session expired. Please sign in again.');
+			} else if (e instanceof PaymentRequiredError) {
+				this.showPaywall(e, trigger);
 			} else {
 				console.error('[GTD Brain] sync failed', e);
 				this.updateStatus('sync failed');
@@ -164,10 +178,17 @@ export default class GtdBrainPlugin extends Plugin {
 		}
 	}
 
+	private showPaywall(e: PaymentRequiredError, trigger: SyncTrigger): void {
+		const open = this.paywall.blocked(trigger);
+		this.updateStatus();
+		if (open) new PaywallModal(this.app, e.message, e.signupUrl).open();
+	}
+
 	private updateStatus(state?: string): void {
 		if (!this.statusEl) return;
 		const session = this.data.session;
-		this.statusEl.setText(session ? `GTD Brain: ${state ?? 'synced'}` : 'GTD Brain: signed out');
+		const idle = this.paywall.active ? 'membership needed' : 'synced';
+		this.statusEl.setText(session ? `GTD Brain: ${state ?? idle}` : 'GTD Brain: signed out');
 	}
 
 	async loadAll(): Promise<void> {

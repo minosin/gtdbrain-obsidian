@@ -32,7 +32,7 @@ export class LoginModal extends Modal {
 
 		if (this.step === 'email') {
 			contentEl.createEl('p', {
-				text: 'Enter your email. We send you a one-time code — no password. A new email creates a free GTD Brain account.',
+				text: 'Enter your email. We send you a one-time code — no password. A new email creates a GTD Brain account; syncing needs a membership.',
 				cls: 'gtd-brain-muted',
 			});
 			new Setting(contentEl).setName('Email').addText((t) => {

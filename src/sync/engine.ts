@@ -37,6 +37,18 @@ export type SyncResult = {
 
 export class SignedOutError extends Error {}
 
+// A 402 from any call ends the whole sync: a gated create has no card id to store, so
+// pushing on would recreate the note as a duplicate once a held card is released.
+export class PaymentRequiredError extends Error {
+	constructor(
+		message: string,
+		public readonly signupUrl: string | null,
+	) {
+		super(message);
+		this.name = 'PaymentRequiredError';
+	}
+}
+
 export async function ensureScaffold(vault: VaultAdapter, root: string, board: Board | null): Promise<string[]> {
 	const folders = board
 		? sortedColumns(board.columns).map((c) => buildLayout(root, board.columns, board.cards, board.contexts ?? []).folderByColumn.get(c.id)!)
@@ -53,20 +65,27 @@ function errorMessage(e: unknown): string {
 	return e instanceof Error ? e.message : String(e);
 }
 
-function isSignedOut(e: unknown): boolean {
-	return e instanceof ApiError && e.status === 401;
+function isGated(e: unknown): e is ApiError {
+	return e instanceof ApiError && (e.status === 401 || e.status === 402);
+}
+
+function gateError(e: ApiError): Error {
+	if (e.status === 401) return new SignedOutError();
+	return new PaymentRequiredError(e.message, e.details.signupUrl ?? null);
+}
+
+async function fetchBoardOrStop(ctx: ClientContext): Promise<Board> {
+	try {
+		return await fetchBoard(ctx);
+	} catch (e) {
+		throw isGated(e) ? gateError(e) : e;
+	}
 }
 
 export async function runSync(ctx: ClientContext, vault: VaultAdapter, opts: SyncOptions, snapshot: Snapshot): Promise<SyncResult> {
 	const warnings: string[] = [];
 	const errors: string[] = [];
-	let board: Board;
-	try {
-		board = await fetchBoard(ctx);
-	} catch (e) {
-		if (isSignedOut(e)) throw new SignedOutError();
-		throw e;
-	}
+	let board = await fetchBoardOrStop(ctx);
 	let layout = buildLayout(opts.root, board.columns, board.cards, board.contexts ?? []);
 	await ensureScaffold(vault, opts.root, board);
 
@@ -107,14 +126,14 @@ export async function runSync(ctx: ClientContext, vault: VaultAdapter, opts: Syn
 			}
 			pushed++;
 		} catch (e) {
-			if (isSignedOut(e)) throw new SignedOutError();
+			if (isGated(e)) throw gateError(e);
 			const where = op.type === 'create' ? op.note.path : op.path ?? op.id;
 			errors.push(`${op.type} failed for ${where}: ${errorMessage(e)}`);
 		}
 	}
 
 	if (plan.ops.length > 0) {
-		board = await fetchBoard(ctx);
+		board = await fetchBoardOrStop(ctx);
 		layout = buildLayout(opts.root, board.columns, board.cards, board.contexts ?? []);
 	}
 
