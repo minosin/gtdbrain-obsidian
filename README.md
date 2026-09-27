@@ -10,7 +10,7 @@ Install it from **Settings → Community plugins → Browse → “GTD Brain”*
 
 ## GTD in Obsidian, step by step
 
-1. **Capture** — make a note in `Inbox/`. The title is the item, the body is the notes. That is the whole capture step; the note is on your board on the next sync.
+1. **Capture** — run *GTD Brain: Capture to Inbox* (or select the ribbon's inbox icon), type the item, press Enter: it is on top of your board's Inbox at once and a note in `Inbox/`. Select text in any note and run *Capture selection to Inbox* (also in the right-click menu) to capture it with a link back to where it came from. Give either command a hotkey in **Settings → Hotkeys**. Or just make a note in `Inbox/`: the title is the item, the body is the notes, and it is on your board on the next sync.
 2. **Clarify** — move the note into `Next Actions/` and set `context:` (`@calls`, `@computer`, `@errands`, …); into `Projects/` if it takes more than one step; into `Waiting For/` with `who:` and `since:` if you handed it off; into `Someday Maybe/` if not now.
 3. **Organize** — link an action to its project with `project: "[[Project name]]"`. The generated `Projects.md` lists every project with its next actions underneath and flags the ones with none.
 4. **Reflect** — open `Weekly Review.md` and work down the checklist (get clear, get current, get creative). Each line links to the list it refers to.
@@ -115,7 +115,7 @@ Without a membership the plugin is read-only, like the web and phone apps:
 
 - **An account is required.** The plugin is a client for [GTD Brain](https://gtdbrain.com/?source=obsidian-readme); it does nothing until you sign in. Signing in with a new email creates an account; sending changes to the board needs a paid membership ([details](#membership-what-is-free-and-what-is-not)).
 - **Network requests** go to `https://api.minosin.com` (GTD Brain's backend, operated by Minosin AB) and nowhere else: to send you the sign-in code, to exchange it for a session token, and to read and write your board during a sync. Requests are made with Obsidian's `requestUrl` and only when you sign in, run a command, or on the sync interval you configure.
-- **What is sent:** your email at sign-in; for each card note in the GTD folder, its title (file name), body, and the frontmatter fields listed above. Nothing outside the GTD folder, no other properties, no vault metadata.
+- **What is sent:** your email at sign-in; for each card note in the GTD folder, its title (file name), body, and the frontmatter fields listed above; for a capture, the text you typed or selected, a link to the note you selected it in, and which capture command you used. Apart from what you capture, nothing outside the GTD folder is read or sent: no other properties, no vault metadata.
 - **Server-side logging:** like every GTD Brain client, requests are logged on the backend (endpoint, timestamp, a random per-install id the plugin generates, the plugin version, your account). There is no client-side telemetry or analytics in the plugin. How that data is handled: [gtdbrain.com/privacy](https://gtdbrain.com/privacy?source=obsidian-readme) · [terms](https://gtdbrain.com/terms?source=obsidian-readme).
 - **Where the token lives:** the session token is stored in the plugin's `data.json` inside your vault's `.obsidian` folder, like any sync plugin. *Sign out* removes it. Do not share that file.
 
@@ -123,6 +123,8 @@ Without a membership the plugin is read-only, like the web and phone apps:
 
 | Command | What it does |
 | --- | --- |
+| Capture to Inbox | Quick-capture box; the item goes to the top of your board's Inbox and into `Inbox/` |
+| Capture selection to Inbox | Captures the selected text, with a link back to its note (also in the editor's right-click menu) |
 | Sync now | Push note changes to the board, pull the board into the vault |
 | Set up GTD folders | Create the list folders, overview notes and the weekly review checklist |
 | Sign in / Sign out | Email-code sign-in; sign-out keeps your notes |

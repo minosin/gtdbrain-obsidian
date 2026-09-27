@@ -1,3 +1,7 @@
 .gtd-brain-muted {
 	color: var(--text-muted);
 }
+
+.gtd-brain-capture-field {
+	width: 100%;
+}
