@@ -85,8 +85,8 @@ export default class GtdBrainPlugin extends Plugin {
 			board = await ensureBoard(this.clientContext());
 		} catch (e) {
 			// An older backend without POST /board: GET during the sync still works for
-			// accounts that already have a board.
-			if (!(e instanceof ApiError && e.status === 404)) throw e;
+			// accounts that already have a board. A 402: the sync opens the membership dialog.
+			if (!(e instanceof ApiError && (e.status === 404 || e.status === 402))) throw e;
 		}
 		await ensureScaffold(new ObsidianVaultAdapter(this.app), this.prefs.rootFolder, board);
 		await this.syncNow('sign-in');
@@ -108,7 +108,7 @@ export default class GtdBrainPlugin extends Plugin {
 			try {
 				board = await ensureBoard(this.clientContext());
 			} catch (e) {
-				if (!(e instanceof ApiError && e.status === 404)) {
+				if (!(e instanceof ApiError && (e.status === 404 || e.status === 402))) {
 					new Notice(`Could not reach GTD Brain: ${e instanceof Error ? e.message : String(e)}`);
 				}
 			}

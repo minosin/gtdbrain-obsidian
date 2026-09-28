@@ -349,4 +349,20 @@ describe('without a membership', () => {
 		expect(vault.body('GTD Brain/Inbox/Renew passport.md')).toBe('local edit\n');
 		expect(result.snapshot['card-1']!.notes).toBe('');
 	});
+
+	it('asks for the membership and leaves the vault alone when the board read itself is a 402', async () => {
+		backend.seed({ title: 'Renew passport', columnId: 'col-inbox' });
+		const first = await runSync(CTX, vault, OPTS, {});
+		backend.readsGated = true;
+		vault.files.set('GTD Brain/Inbox/Buy milk.md', '');
+		const before = new Map(vault.files);
+
+		const result = await runSync(CTX, vault, OPTS, first.snapshot);
+
+		expect(result.membershipRequired).toEqual({ signupUrl: SIGNUP_URL });
+		expect(result.errors).toEqual([]);
+		expect(result.snapshot).toEqual(first.snapshot);
+		expect(vault.files).toEqual(before);
+		expect(backend.requests.filter((r) => r.method !== 'GET')).toEqual([]);
+	});
 });
