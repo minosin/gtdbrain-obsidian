@@ -99,6 +99,8 @@ export class FakeBackend {
 	member: boolean | undefined = undefined;
 	/** A membership that lapsed after the board was read: writes are a 402, the board says nothing. */
 	writesGated = false;
+	/** A backend that 402s the board read as well as every write. */
+	readsGated = false;
 	inbox: ApiColumn;
 	next: ApiColumn;
 	projects: ApiColumn;
@@ -151,6 +153,9 @@ export class FakeBackend {
 		const m = /^\/api\/gtdbrain\/v2\/gtd\/(.*)$/.exec(url.pathname);
 		if (!m) return this.error(404, 'not_found', 'no route');
 		const rest = m[1]!;
+		if (this.readsGated) {
+			return this.json(402, { error: { code: 'subscription_required', message: 'GTD Brain needs an active membership.', signupUrl: SIGNUP_URL, held: false } });
+		}
 		if (rest === 'board') return this.json(200, this.board());
 		if (this.member === false || this.writesGated) {
 			return this.json(402, { error: { code: 'subscription_required', message: 'GTD Brain needs an active membership.', signupUrl: SIGNUP_URL, held: false } });

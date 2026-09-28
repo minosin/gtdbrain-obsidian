@@ -69,6 +69,8 @@ export async function runSync(ctx: ClientContext, vault: VaultAdapter, opts: Syn
 		board = await fetchBoard(ctx);
 	} catch (e) {
 		if (isSignedOut(e)) throw new SignedOutError();
+		// A backend that gates the board read too: leave the notes and the snapshot as they are.
+		if (isMembershipRequired(e)) return { snapshot, pushed: 0, pulled: 0, warnings, errors, membershipRequired: { signupUrl: e.signupUrl }, pending: 0 };
 		throw e;
 	}
 	let layout = buildLayout(opts.root, board.columns, board.cards, board.contexts ?? []);
