@@ -1,5 +1,6 @@
 ## 1.1.0
 
+- New: **Capture to Inbox** (command, ribbon icon) opens a quick-capture box, and **Capture selection to Inbox** (command, editor right-click menu) sends the selected text with a link back to its note. The item goes straight to the top of your GTD Brain Inbox and appears as a note in `Inbox/`, without waiting for a sync. Bind either command to a key in **Settings → Hotkeys**. Without a membership, signed out or offline, the note is saved in `Inbox/` and sent by the first sync that can.
 - Syncing changes from the vault to the board now needs a GTD Brain membership. Without one the plugin is read-only: the board still comes into the vault, and changes you make stay in your notes (the status bar counts them) until your membership starts, when the next sync sends them.
 - After sign-in, an account without a membership sees one dialog explaining this, with a button that opens checkout in the browser. It shows again only on *Sync now* with changes waiting, never during background syncs. The settings tab has the same button.
 

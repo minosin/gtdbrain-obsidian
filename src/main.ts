@@ -2,6 +2,7 @@ import { Notice, Plugin } from 'obsidian';
 import type { Session } from './api/auth';
 import { ensureBoard, type Board } from './api/board';
 import { ApiError, type ClientContext } from './api/client';
+import { registerCaptureCommands } from './commands/capture';
 import { DEFAULT_SETTINGS, GtdBrainSettingTab, type GtdBrainSettings, type PluginData } from './settings';
 import { ensureScaffold, runSync, SignedOutError } from './sync/engine';
 import { LoginModal } from './ui/loginModal';
@@ -55,6 +56,7 @@ export default class GtdBrainPlugin extends Plugin {
 			name: 'Open the web app',
 			callback: () => window.open('https://dashboard.gtdbrain.com/?source=obsidian'),
 		});
+		registerCaptureCommands(this);
 
 		this.app.workspace.onLayoutReady(() => {
 			this.scheduleSync();
@@ -116,6 +118,20 @@ export default class GtdBrainPlugin extends Plugin {
 		await ensureScaffold(vault, this.prefs.rootFolder, board);
 		new Notice(`GTD folders are ready in "${this.prefs.rootFolder}".`);
 		if (this.data.session) await this.syncNow('scaffold');
+	}
+
+	/**
+	 * Runs [task] while no sync is running, and keeps syncs out until it is done: a capture writes
+	 * a note into Inbox, and a sync listing the vault at the same moment would send it twice.
+	 */
+	async exclusive<T>(task: () => Promise<T>): Promise<T> {
+		while (this.syncing) await new Promise((resolve) => window.setTimeout(resolve, 100));
+		this.syncing = true;
+		try {
+			return await task();
+		} finally {
+			this.syncing = false;
+		}
 	}
 
 	scheduleSync(): void {
@@ -188,11 +204,11 @@ export default class GtdBrainPlugin extends Plugin {
 		return this.membership?.signupUrl ?? `https://gtdbrain.com/buy?email=${encodeURIComponent(email)}&source=obsidian`;
 	}
 
-	openMembership(): void {
-		new MembershipModal(this.app, this.signupUrl(), this.membership?.pending ?? 0).open();
+	openMembership(captured: string | null = null): void {
+		new MembershipModal(this.app, this.signupUrl(), this.membership?.pending ?? 0, captured).open();
 	}
 
-	private updateStatus(state?: string): void {
+	updateStatus(state?: string): void {
 		if (!this.statusEl) return;
 		const session = this.data.session;
 		const locked = session !== null && this.membership !== null;

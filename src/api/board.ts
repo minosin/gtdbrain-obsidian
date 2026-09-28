@@ -58,6 +58,16 @@ export function createCard(ctx: ClientContext, req: CreateCardRequest): Promise<
 	return apiJson<ApiCard>(ctx, 'POST', `${GTD}/cards`, req);
 }
 
+// A capture from the capture commands. Without columnId the backend puts it in the Inbox, and
+// toIndex 0 puts it on top, like a capture from every other GTD Brain client. `via` says which
+// command sent it; it rides on the request the capture needs anyway (the backend's request log
+// keeps it), so the plugin makes no separate analytics call.
+export type CaptureVia = 'command' | 'selection';
+
+export function captureCard(ctx: ClientContext, req: { title: string; notes?: string; via: CaptureVia }): Promise<ApiCard> {
+	return apiJson<ApiCard>(ctx, 'POST', `${GTD}/cards`, { ...req, toIndex: 0 });
+}
+
 // Only the keys present are sent; a null value clears that field on the board.
 export type CardPatch = Partial<Record<'title' | 'notes' | 'context' | 'who' | 'since' | 'projectId', string | null>>;
 

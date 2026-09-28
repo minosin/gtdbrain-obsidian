@@ -156,12 +156,14 @@ export class FakeBackend {
 			return this.json(402, { error: { code: 'subscription_required', message: 'GTD Brain needs an active membership.', signupUrl: SIGNUP_URL, held: false } });
 		}
 		if (rest === 'cards' && method === 'POST') {
-			const col = this.columns.find((c) => c.id === body.columnId);
+			// Like the backend: no columnId means the inbox (the first normal column).
+			const col = body.columnId === undefined ? this.columns.find((c) => c.kind === 'normal') : this.columns.find((c) => c.id === body.columnId);
 			if (!col) return this.error(400, 'invalid_request', 'Column does not exist');
 			const kind = body.kind ?? 'card';
 			const fits = col.kind === 'flexible' || (kind === 'action' && col.kind === 'next') || (kind === 'project' && col.kind === 'projects') || (kind === 'card' && col.kind === 'normal');
 			if (!fits) return this.error(400, 'invalid_request', `A '${kind}' card cannot go in a '${col.kind}' column`);
 			const card = this.seed({ title: body.title, columnId: col.id, kind, notes: body.notes ?? null, context: body.context ?? null, who: body.who ?? null, since: body.since ?? null });
+			if (body.toIndex === 0) col.cardIds = [card.id, ...col.cardIds.filter((id) => id !== card.id)];
 			return this.json(201, card);
 		}
 		const cm = /^cards\/([^/]+)(?:\/(move|archive))?$/.exec(rest);

@@ -1,11 +1,13 @@
 import { type App, Modal, Setting } from 'obsidian';
 
-// Shown once after sign-in, and when a manual sync had changes it could not send.
+// Shown once after sign-in, when a manual sync had changes it could not send, and when a capture
+// could not go to the board ([captured] is its title).
 export class MembershipModal extends Modal {
 	constructor(
 		app: App,
 		private readonly signupUrl: string,
 		private readonly pending: number,
+		private readonly captured: string | null = null,
 	) {
 		super(app);
 	}
@@ -15,7 +17,9 @@ export class MembershipModal extends Modal {
 		contentEl.empty();
 		this.setTitle('Start your free month');
 		contentEl.createEl('p', {
-			text: 'Your board is in your vault. Sending changes back to it — new notes, edits and moves — needs a GTD Brain membership, the same one as on the web and the phone apps.',
+			text: this.captured
+				? `“${this.captured}” is saved in the Inbox folder of your vault. Sending it to your GTD Brain Inbox — and on to the web, the phone apps and your assistants — needs a GTD Brain membership.`
+				: 'Your board is in your vault. Sending changes back to it — new notes, edits and moves — needs a GTD Brain membership, the same one as on the web and the phone apps.',
 		});
 		contentEl.createEl('p', {
 			text:
