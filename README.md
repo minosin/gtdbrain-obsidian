@@ -96,12 +96,12 @@ Manual install, for a vault that cannot reach the directory: download `main.js`,
 
 ## Membership: what is free and what is not
 
-**Payment is required for full access.** The plugin is free to install and open source under MIT, but sending changes from the vault to your board (new notes, edits, moves, archiving) needs a paid GTD Brain membership. It is one membership for everything — web, iOS, Android, every assistant and this plugin — and the yearly plan starts with one month free: cancel before it ends and you pay nothing. Plans and prices: [gtdbrain.com/pricing](https://gtdbrain.com/pricing?source=obsidian-readme).
+**Payment is required for full access.** The plugin is free to install and open source under MIT, but syncing the vault with your board, in either direction, needs a paid GTD Brain membership. It is one membership for everything — web, iOS, Android, every assistant and this plugin — and the yearly plan starts with one month free: cancel before it ends and you pay nothing. Plans and prices: [gtdbrain.com/pricing](https://gtdbrain.com/pricing?source=obsidian-readme).
 
-Without a membership the plugin is read-only, like the web and phone apps:
+Without a membership nothing syncs:
 
-- Your board still comes into the vault, and the notes keep following changes made elsewhere.
-- Changes you make in the vault are not sent. They stay in your notes, the status bar counts them, and the first sync after your membership starts sends them.
+- Your board does not come into the vault, and nothing is sent from it. The status bar says *membership needed*.
+- Notes you write or capture stay in the vault, and the first sync after your membership starts sends them.
 - Right after you sign in, the plugin shows one dialog about this. It shows again only when you run *Sync now* while changes are waiting — never during background syncs. Its button opens checkout in your browser; the plugin never handles payment details. The settings tab has the same button, and selecting the status bar item opens the dialog.
 
 ## How the two-way sync decides
@@ -113,7 +113,7 @@ Without a membership the plugin is read-only, like the web and phone apps:
 
 ## Network use, account and privacy
 
-- **An account is required.** The plugin is a client for [GTD Brain](https://gtdbrain.com/?source=obsidian-readme); it does nothing until you sign in. Signing in with a new email creates an account; sending changes to the board needs a paid membership ([details](#membership-what-is-free-and-what-is-not)).
+- **An account is required.** The plugin is a client for [GTD Brain](https://gtdbrain.com/?source=obsidian-readme); it does nothing until you sign in. Signing in with a new email creates an account; syncing with the board needs a paid membership ([details](#membership-what-is-free-and-what-is-not)).
 - **Network requests** go to `https://api.minosin.com` (GTD Brain's backend, operated by Minosin AB) and nowhere else: to send you the sign-in code, to exchange it for a session token, and to read and write your board during a sync. Requests are made with Obsidian's `requestUrl` and only when you sign in, run a command, or on the sync interval you configure.
 - **What is sent:** your email at sign-in; for each card note in the GTD folder, its title (file name), body, and the frontmatter fields listed above; for a capture, the text you typed or selected, a link to the note you selected it in, and which capture command you used. Apart from what you capture, nothing outside the GTD folder is read or sent: no other properties, no vault metadata.
 - **Server-side logging:** like every GTD Brain client, requests are logged on the backend (endpoint, timestamp, a random per-install id the plugin generates, the plugin version, your account). There is no client-side telemetry or analytics in the plugin. How that data is handled: [gtdbrain.com/privacy](https://gtdbrain.com/privacy?source=obsidian-readme) · [terms](https://gtdbrain.com/terms?source=obsidian-readme).

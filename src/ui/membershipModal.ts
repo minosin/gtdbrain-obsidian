@@ -19,7 +19,7 @@ export class MembershipModal extends Modal {
 		contentEl.createEl('p', {
 			text: this.captured
 				? `“${this.captured}” is saved in the Inbox folder of your vault. Sending it to your GTD Brain Inbox — and on to the web, the phone apps and your assistants — needs a GTD Brain membership.`
-				: 'Your board is in your vault. Sending changes back to it — new notes, edits and moves — needs a GTD Brain membership, the same one as on the web and the phone apps.',
+				: 'Syncing this vault with your GTD Brain board — both ways, with the web, the phone apps and your assistants — needs a GTD Brain membership, the same one as on the web and the phone apps.',
 		});
 		contentEl.createEl('p', {
 			text:
