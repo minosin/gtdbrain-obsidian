@@ -213,10 +213,10 @@ export default class GtdBrainPlugin extends Plugin {
 		const session = this.data.session;
 		const locked = session !== null && this.membership !== null;
 		const pending = this.membership?.pending ?? 0;
-		const idle = locked ? (pending > 0 ? `${pending} change(s) waiting` : 'read-only') : 'synced';
+		const idle = locked ? (pending > 0 ? `${pending} change(s) waiting` : 'membership needed') : 'synced';
 		this.statusEl.setText(session ? `GTD Brain: ${state ?? idle}` : 'GTD Brain: signed out');
 		this.statusEl.toggleClass('mod-clickable', locked);
-		if (locked) this.statusEl.setAttr('aria-label', 'Sending changes needs a GTD Brain membership');
+		if (locked) this.statusEl.setAttr('aria-label', 'Syncing needs a GTD Brain membership');
 		else this.statusEl.removeAttribute('aria-label');
 	}
 

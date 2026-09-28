@@ -1,3 +1,7 @@
+## Unreleased
+
+- GTD Brain no longer gives a non-member read access: without a membership the board no longer comes into the vault either. The plugin already handles this (the membership dialog opens instead of "sync failed"); the status bar now says *membership needed* instead of *read-only*, and the dialog and README describe the new rule.
+
 ## 1.2.0
 
 - New: **Capture to Inbox** (command, ribbon icon) opens a quick-capture box, and **Capture selection to Inbox** (command, editor right-click menu) sends the selected text with a link back to its note. The item goes straight to the top of your GTD Brain Inbox and appears as a note in `Inbox/`, without waiting for a sync. Bind either command to a key in **Settings → Hotkeys**. Without a membership, signed out or offline, the note is saved in `Inbox/` and sent by the first sync that can.
