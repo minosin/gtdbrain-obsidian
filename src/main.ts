@@ -5,6 +5,7 @@ import { ApiError, type ClientContext } from './api/client';
 import { DEFAULT_SETTINGS, GtdBrainSettingTab, type GtdBrainSettings, type PluginData } from './settings';
 import { ensureScaffold, runSync, SignedOutError } from './sync/engine';
 import { LoginModal } from './ui/loginModal';
+import { MembershipModal } from './ui/membershipModal';
 import { ObsidianVaultAdapter } from './vault/obsidianAdapter';
 
 export default class GtdBrainPlugin extends Plugin {
@@ -12,6 +13,8 @@ export default class GtdBrainPlugin extends Plugin {
 	private syncing = false;
 	private timer: number | null = null;
 	private statusEl: HTMLElement | null = null;
+	/** From the last sync: set while the account has no membership, so changes are not sent. */
+	membership: { signupUrl: string | null; pending: number } | null = null;
 
 	get prefs(): GtdBrainSettings {
 		return this.data.settings;
@@ -21,6 +24,9 @@ export default class GtdBrainPlugin extends Plugin {
 		await this.loadAll();
 		this.addSettingTab(new GtdBrainSettingTab(this.app, this));
 		this.statusEl = this.addStatusBarItem();
+		this.registerDomEvent(this.statusEl, 'click', () => {
+			if (this.membership) this.openMembership();
+		});
 		this.updateStatus();
 
 		this.addRibbonIcon('refresh-cw', 'Sync with GTD Brain', () => void this.syncNow('manual'));
@@ -89,6 +95,7 @@ export default class GtdBrainPlugin extends Plugin {
 	async signOut(): Promise<void> {
 		this.data.session = null;
 		this.data.snapshot = {};
+		this.membership = null;
 		await this.saveAll();
 		this.updateStatus();
 		new Notice('Signed out. Your notes stay in the vault.');
@@ -140,13 +147,25 @@ export default class GtdBrainPlugin extends Plugin {
 			);
 			this.data.snapshot = result.snapshot;
 			await this.saveAll();
+			const wasLocked = this.membership !== null;
+			this.membership = result.membershipRequired ? { signupUrl: result.membershipRequired.signupUrl, pending: result.pending } : null;
+			// Right after sign-in, and when the user synced by hand and something stayed behind.
+			// Never from a background sync.
+			const ask = this.membership !== null && (trigger === 'sign-in' || (trigger === 'manual' && result.pending > 0));
 			for (const w of result.warnings) console.warn('[GTD Brain]', w);
 			if (result.errors.length > 0) {
 				console.error('[GTD Brain] sync errors', result.errors);
 				new Notice(`GTD Brain sync finished with ${result.errors.length} problem(s): ${result.errors[0]}`, 8000);
+			} else if (ask) {
+				// The modal says it.
+			} else if (this.membership && (trigger === 'manual' || trigger === 'scaffold')) {
+				new Notice(`GTD Brain synced: ${result.pulled} note(s) updated from your board.`);
 			} else if (trigger === 'manual' || trigger === 'sign-in' || trigger === 'scaffold') {
 				new Notice(`GTD Brain synced: ${result.pushed} change(s) pushed, ${result.pulled} note(s) updated.`);
+			} else if (wasLocked && !this.membership && result.pushed > 0) {
+				new Notice(`GTD Brain membership active: ${result.pushed} waiting change(s) sent to your board.`);
 			}
+			if (ask) this.openMembership();
 			this.updateStatus();
 		} catch (e) {
 			if (e instanceof SignedOutError) {
@@ -164,10 +183,25 @@ export default class GtdBrainPlugin extends Plugin {
 		}
 	}
 
+	signupUrl(): string {
+		const email = this.data.session?.email ?? '';
+		return this.membership?.signupUrl ?? `https://gtdbrain.com/buy?email=${encodeURIComponent(email)}&source=obsidian`;
+	}
+
+	openMembership(): void {
+		new MembershipModal(this.app, this.signupUrl(), this.membership?.pending ?? 0).open();
+	}
+
 	private updateStatus(state?: string): void {
 		if (!this.statusEl) return;
 		const session = this.data.session;
-		this.statusEl.setText(session ? `GTD Brain: ${state ?? 'synced'}` : 'GTD Brain: signed out');
+		const locked = session !== null && this.membership !== null;
+		const pending = this.membership?.pending ?? 0;
+		const idle = locked ? (pending > 0 ? `${pending} change(s) waiting` : 'read-only') : 'synced';
+		this.statusEl.setText(session ? `GTD Brain: ${state ?? idle}` : 'GTD Brain: signed out');
+		this.statusEl.toggleClass('mod-clickable', locked);
+		if (locked) this.statusEl.setAttr('aria-label', 'Sending changes needs a GTD Brain membership');
+		else this.statusEl.removeAttribute('aria-label');
 	}
 
 	async loadAll(): Promise<void> {

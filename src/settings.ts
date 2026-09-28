@@ -45,7 +45,7 @@ export class GtdBrainSettingTab extends PluginSettingTab {
 		const session = this.plugin.data.session;
 		new Setting(containerEl)
 			.setName('Account')
-			.setDesc(session ? `Signed in as ${session.email}` : 'Not signed in. Sign in with your email to sync this vault with your GTD Brain board.')
+			.setDesc(session ? `Signed in as ${session.email}` : 'Not signed in. Sign in with your email to sync this vault with your GTD Brain board. Syncing changes needs a GTD Brain membership.')
 			.addButton((b) =>
 				session
 					? b.setButtonText('Sign out').onClick(async () => {
@@ -57,6 +57,18 @@ export class GtdBrainSettingTab extends PluginSettingTab {
 							.setCta()
 							.onClick(() => new LoginModal(this.app, this.plugin, () => this.display()).open()),
 			);
+
+		if (session && this.plugin.membership) {
+			new Setting(containerEl)
+				.setName('Membership')
+				.setDesc('Your board syncs into this vault. Sending your changes to it needs a GTD Brain membership. The yearly plan starts with one month free.')
+				.addButton((b) =>
+					b
+						.setButtonText('Start your free month')
+						.setCta()
+						.onClick(() => window.open(this.plugin.signupUrl())),
+				);
+		}
 
 		new Setting(containerEl)
 			.setName('Sync now')
