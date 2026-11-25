@@ -1,5 +1,6 @@
 ## Unreleased
 
+- **Open the web app** now opens it signed in, instead of asking for an email code again.
 - GTD Brain no longer gives a non-member read access: without a membership the board no longer comes into the vault either. The plugin already handles this (the membership dialog opens instead of "sync failed"); the status bar now says *membership needed* instead of *read-only*, and the dialog and README describe the new rule.
 
 ## 1.2.0
