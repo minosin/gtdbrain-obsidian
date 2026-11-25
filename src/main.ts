@@ -1,5 +1,5 @@
 import { Notice, Plugin } from 'obsidian';
-import type { Session } from './api/auth';
+import { signedInUrl, type Session } from './api/auth';
 import { ensureBoard, type Board } from './api/board';
 import { ApiError, type ClientContext } from './api/client';
 import { registerCaptureCommands } from './commands/capture';
@@ -54,7 +54,9 @@ export default class GtdBrainPlugin extends Plugin {
 		this.addCommand({
 			id: 'open-dashboard',
 			name: 'Open the web app',
-			callback: () => window.open('https://dashboard.gtdbrain.com/?source=obsidian'),
+			callback: async () => {
+				window.open(await signedInUrl(this.clientContext(), 'https://dashboard.gtdbrain.com/?source=obsidian'));
+			},
 		});
 		registerCaptureCommands(this);
 
